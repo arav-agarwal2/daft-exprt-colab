@@ -243,30 +243,33 @@ def extract_pitch(wav, fs, hparams):
                '-x', f'{hparams.max_f0}',
                '-u', f'{hparams.uv_interval}',
                '-w', f'{hparams.uv_cost}']
+
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call(process, stdout=devnull, stderr=subprocess.STDOUT)
     # read PCM file
-    with open(f0_file, 'rb') as f:
+    '''     with open(f0_file, 'rb') as f:
         buf = f.read()
-        pitch = np.frombuffer(buf, dtype='int16')
+        pitch = np.frombuffer(buf, dtype='int16') '''
     # extract unvoiced indexes
-    pitch = np.copy(pitch)
+    wav, _ = librosa.load(wav_file)
+    wav = wav.astype(np.float64)
+    import pyworld as world
+    pitch, t = world.dio(wav, hparams.sampling_rate,  frame_period=hparams.hop_length / hparams.sampling_rate * 1000)
+    pitch = world.stonemask(wav, pitch, t, hparams.sampling_rate)
+    la = len(pitch)
     uv_idxs = np.where(pitch <= 0.)[0]
     # put to log scale
     pitch[uv_idxs] = 1000.
     pitch = np.log(pitch)
     # set unvoiced values to 0.
-    pitch[uv_idxs] = 0.
-    # extract pitch for each mel-spec frame
-    pitch_frames = pitch[::hparams.hop_length]
-    # edge case
-    if len(pitch) % hparams.hop_length == 0:
-        pitch_frames = np.append(pitch_frames, pitch[-1])
+    pitch[uv_idxs] = 0
+
+    assert la == len(pitch)
     # delete files
     os.remove(wav_file)
     os.remove(f0_file)
     
-    return pitch_frames
+    return pitch
 
 
 def get_symbols_pitch(pitch, markers):
@@ -342,7 +345,7 @@ def mel_spectrogram_HiFi(wav, hparams):
     sampling_rate = hparams.sampling_rate
     min_clipping = hparams.min_clipping
     # get mel filter bank
-    mel_filter_bank = librosa_mel_fn(sampling_rate, n_fft, num_mels, fmin, fmax)  # (n_mels, 1 + n_fft/2)
+    mel_filter_bank = librosa_mel_fn(sr=sampling_rate, n_fft=n_fft, n_mels=num_mels, fmin=fmin, fmax=fmax)  # (n_mels, 1 + n_fft/2)
     mel_filter_bank = torch.from_numpy(mel_filter_bank).float()  # (n_mels, 1 + n_fft/2)
     # build hann window
     hann_window = torch.hann_window(n_fft)
@@ -437,7 +440,6 @@ def _extract_features(files, features_dir, hparams, log_queue):
         assert(len(int_durations) == len(lines)), logger.error(f'{markers_file} -- ({len(int_durations)}, {len(lines)})')
         assert(sum(int_durations) == nb_mel_spec_frames), logger.error(f'{markers_file} -- ({sum(int_durations)}, {nb_mel_spec_frames})')
         assert(0 not in int_durations), logger.error(f'{markers_file} -- {int_durations}')
-        
         # update markers:
         # change timings to start from 0
         # add punctuation or whitespace at word boundaries
@@ -479,7 +481,8 @@ def _extract_features(files, features_dir, hparams, log_queue):
             
             # extract log pitch for each mel-spec frame
             frames_pitch = extract_pitch(wav, fs, hparams)
-            assert(len(frames_pitch) == nb_mel_spec_frames), logger.error(f'{markers_file} -- ({len(frames_pitch)}, {nb_mel_spec_frames})')
+            assert(len(frames_pitch) == nb_mel_spec_frames), logger.error(f'{markers_file} -- ({len(frames_pitch)}, {nb_mel_spec_frames}) 1212')
+            
             # save frames pitch values
             pitch_file = os.path.join(features_dir, f'{file_name}.frames_f0')
             with open(pitch_file, 'w', encoding='utf-8') as f:

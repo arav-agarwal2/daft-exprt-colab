@@ -16,6 +16,6 @@ MFA_thirdparty:
 	mfa thirdparty validate
 
 MFA_pretrained:
-	mfa download acoustic english
-	mfa download g2p english_g2p
-	mfa download dictionary english
+	mfa model download acoustic english
+	mfa model download g2p english_g2p
+	mfa model download dictionary english

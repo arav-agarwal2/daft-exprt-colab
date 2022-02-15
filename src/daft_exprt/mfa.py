@@ -219,7 +219,7 @@ def mfa(dataset_dir, hparams, n_jobs):
             _logger.info('Performing forced alignment using a pretrained model')
             tmp_dir = os.path.join(temp_dir, 'align')
             os.system(f'mfa align {corpus_dir} {dictionary} {acoustic_model} '
-                        f'{align_out_dir} -t {tmp_dir} -j {n_jobs} -v -c')
+                        f'{align_out_dir} -t {tmp_dir} -j {n_jobs} -v --clean')
             
             # extract word/phone alignment markers from .TextGrid files
             _logger.info('Extracting markers')
