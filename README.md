@@ -5,13 +5,13 @@ To make the above work in Colab, you will *probably* need access to Colab's term
   
 Steps:
 - Create a cell that does the following, and run it.
-`
+```
 !wget -O mini.sh https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh
 !chmod +x mini.sh
 !bash ./mini.sh -b -f -p /usr/local
-`
+```
 - Run the following steps in the terminal
-`
+```
 eval "$(conda shell.bash hook)" 
 conda create -n daft_exprt python=3.8 -y 
 conda activate daft_exprt
@@ -22,10 +22,10 @@ pip install pyworld
 pip install -e ../.[pytorch] --find-links https://download.pytorch.org/whl/torch_stable.html
 make MFA_pretrained
 conda install ipykernel
-`
+```
 
 That's it! When running scripts, please use:
-`
+```
 /usr/local/envs/daft_exprt/bin/python
-`
+```
 instead of python, and the jupyter notebook itself does not "really" work yet.
