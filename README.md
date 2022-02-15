@@ -29,3 +29,10 @@ That's it! When running scripts, please use:
 /usr/local/envs/daft_exprt/bin/python
 ```
 instead of python, and the jupyter notebook itself does not "really" work yet.
+
+It's generally recommended to use the GPU only on the actual model training. 
+
+Main Changes:
+- Changed REAPER to pyworld, so that GLIBC 2.29 errors are avoided
+- Updated MFA install to most recent version, which changes some parameters
+- Found a solid method of getting conda with environments 'working' [ Can we just support it? ]
